@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if ! which crf_learn > /dev/null; then
+  brew install crf++
+fi
+
+pip install -r requirements.txt
