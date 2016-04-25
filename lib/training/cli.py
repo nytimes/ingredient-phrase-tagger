@@ -96,7 +96,7 @@ class Cli(object):
                     if utils.normalizeToken(vt) == token:
                         ret.append(key.upper())
 
-            elif isinstance(val, decimal.Decimal) and decimalToken is not None:
+            elif decimalToken is not None:
                 try:
                     if val == decimalToken:
                         ret.append(key.upper())
