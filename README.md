@@ -15,12 +15,13 @@ lines into QUANTITY, UNIT, NAME, COMMENT and OTHER. Given the following input:
 Our tool produces something like:
 
     {
-        "quantity": "1",
-        "unit":     "pound",
-        "name":     "carrots",
-        "comment":  "young ones if possible",
-        "input":    "1 pound carrots, young ones if possible"
-        "display":  "<span class='quantity'>1</span><span class='unit'>pound</span><span class='name'>carrots</span><span class='comment'>, young ones if possible</span>",
+        "qty":     "1",
+        "unit":    "pound"
+        "name":    "carrots",
+        "other":   ",",
+        "comment": "young ones if possible",
+        "input":   "1 pound carrots, young ones if possible",
+        "display": "<span class='qty'>1</span><span class='unit'>pound</span><span class='name'>carrots</span><span class='other'>,</span><span class='comment'>young ones if possible</span>",
     }
 
 We use a conditional random field model (CRF) to extract tags from labelled
