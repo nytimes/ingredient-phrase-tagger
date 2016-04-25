@@ -1,7 +1,8 @@
 # CRF Ingredient Phrase Tagger
 
 This repo contains scripts to extract the Quantity, Unit, Name, and Comments
-from unstructured ingredient phrases. Given the following input:
+from unstructured ingredient phrases. We use it on [Cooking][nytc] to format
+incoming recipes. Given the following input:
 
     1 pound carrots, young ones if possible
     Kosher salt, to taste
@@ -117,6 +118,7 @@ See the top of this README for an example of the expected output.
 [Apache 2.0][apache2].
 
 
+[nytc]:     http://cooking.nytimes.com
 [crf_tut]:  http://people.cs.umass.edu/~mccallum/papers/crf-tutorial.pdf
 [crfpp]:    https://taku910.github.io/crfpp/
 [openblog]: http://open.blogs.nytimes.com/2015/04/09/extracting-structured-data-from-recipes-using-conditional-random-fields/?_r=0
