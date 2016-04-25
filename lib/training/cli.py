@@ -154,7 +154,7 @@ class Cli(object):
 
         opts.add_option("--count", default="100", help="(%default)")
         opts.add_option("--offset", default="0", help="(%default)")
-        opts.add_option("--data-path", default="ingredients.csv", help="(%default)")
+        opts.add_option("--data-path", default="nyt-ingredients-snapshot-2015.csv", help="(%default)")
 
         (options, args) = opts.parse_args(argv)
         return options
