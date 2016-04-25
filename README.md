@@ -1,7 +1,7 @@
-# CRF Ingredient Chunker
+# CRF Ingredient Phrase Tagger
 
-This repo contains scripts to train and test a model for chunking ingredient
-lines into QUANTITY, UNIT, NAME, COMMENT and OTHER. Given the following input:
+This repo contains scripts to extract the Quantity, Unit, Name, and Comments
+from unstructured ingredient phrases. Given the following input:
 
     1 pound carrots, young ones if possible
     Kosher salt, to taste
@@ -91,7 +91,7 @@ Next, we pass this file to `crf_learn`, to generate a model file:
 
 ### Testing
 
-To use the model to chunk your own arbitrary ingredient lines (stored here in
+To use the model to tag your own arbitrary ingredient lines (stored here in
 `input.txt`), you must first convert it into the CRF++ format, then run against
 the model file which we generated above. We provide another helper script to do
 this:
