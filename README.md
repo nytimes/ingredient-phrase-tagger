@@ -115,7 +115,7 @@ See the top of this README for an example of the expected output.
 
 ## License
 
-[Apache 2.0][apache2].
+[Apache 2.0][license].
 
 
 [nytc]:     http://cooking.nytimes.com
@@ -124,4 +124,4 @@ See the top of this README for an example of the expected output.
 [openblog]: http://open.blogs.nytimes.com/2015/04/09/extracting-structured-data-from-recipes-using-conditional-random-fields/?_r=0
 [eg]:       mailto:ericagreene@gmail.com
 [am]:       http://github.com/adammck
-[apache2]:  http://www.apache.org/licenses/LICENSE-2.0
+[license]:  https://github.com/NYTimes/ingredient-phrase-tagger/blob/master/LICENSE.md
