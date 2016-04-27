@@ -14,10 +14,8 @@ def tokenize(s):
     But we must split the text on "cups/" etc. in order to pick it up.
     """
 
-    american_units = ['cup', 'tablespoon', 'teaspoon', 'pound', 'ounce', 'quart', 'pint']
-    for unit in american_units:
-        s = s.replace(unit + '/', unit + ' ')
-        s = s.replace(unit + 's/', unit + 's ')
+    for unit in 'cup tablespoon teaspoon pound ounce quart pint'.split():
+        s = s.replace(unit + '/', unit + ' ').replace(unit + 's/', unit + 's ')
 
     return filter(None, re.split(r'([,\(\)])?\s*', clumpFractions(s)))
 
@@ -84,21 +82,17 @@ def getFeatures(token, index, tokens):
     """
     Returns a list of features for a given token.
     """
-    length = len(tokens)
-
-    return [
-        ("I%s" % index),
-        ("L%s" % lengthGroup(length)),
-        ("Yes" if isCapitalized(token) else "No") + "CAP",
-        ("Yes" if insideParenthesis(token, tokens) else "No") + "PAREN"
-    ]
+    return ("I%s L%s %sCAP %sPAREN" % (
+        index, lengthGroup(len(token)),
+        "Yes" if isCapitalized(token) else "No",
+        "Yes" if insideParenthesis(token, tokens) else "No")).split()
 
 def singularize(word):
     """
     A poor replacement for the pattern.en singularize function, but ok for now.
     """
 
-    units = {
+    return {
         "cups": u"cup",
         "tablespoons": u"tablespoon",
         "teaspoons": u"teaspoon",
@@ -124,12 +118,7 @@ def singularize(word):
         "strips": u"strip",
         "bulbs": u"bulb",
         "bottles": u"bottle"
-    }
-
-    if word in units.keys():
-        return units[word]
-    else:
-        return word
+    }.get(word, word)
 
 def isCapitalized(token):
     """
@@ -141,7 +130,7 @@ def lengthGroup(actualLength):
     """
     Buckets the length of the ingredient into 6 buckets.
     """
-    for n in [4, 8, 12, 16, 20]:
+    for n in (4, 8, 12, 16, 20):
         if actualLength < n:
             return str(n)
 
@@ -151,7 +140,7 @@ def insideParenthesis(token, tokens):
     """
     Returns true if the word is inside parenthesis in the phrase.
     """
-    if token in ['(', ')']:
+    if token in '()':
         return True
     else:
         line = " ".join(tokens)
@@ -165,10 +154,8 @@ def displayIngredient(ingredient):
         # => <span class='qty'>1</span> <span class='name'>cat pie</span>
     """
 
-    return "".join([
-        "<span class='%s'>%s</span>" % (tag, " ".join(tokens))
-        for tag, tokens in ingredient
-    ])
+    fmt = "<span class='%s'>%s</span>"
+    return "".join(fmt % (tag, " ".join(tokens)) for tag, tokens in ingredient)
 
 # HACK: fix this
 def smartJoin(words):
@@ -177,15 +164,4 @@ def smartJoin(words):
     before commas.
     """
 
-    input = " ".join(words)
-
-    # replace " , " with ", "
-    input = input.replace(" , ", ", ")
-
-    # replace " ( " with " ("
-    input = input.replace("( ", "(")
-
-    # replace " ) " with ") "
-    input = input.replace(" )", ")")
-
-    return input
+    return " ".join(words).replace(" , ", ", ").replace("( ", "(").replace(" )", ")")
