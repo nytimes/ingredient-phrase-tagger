@@ -2,7 +2,9 @@ import re
 import decimal
 import optparse
 import pandas as pd
-from training import utils
+
+import utils
+
 
 class Cli(object):
     def __init__(self, argv):

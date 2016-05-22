@@ -192,7 +192,7 @@ def smartJoin(words):
     return input
 
 
-def import_data(fn):
+def import_data(lines):
     """
     This thing takes the output of CRF++ and turns it into an actual
     data structure.
@@ -222,59 +222,57 @@ def import_data(fn):
     #
     # i.e. the output of crf_test -v 1
     #
-    with open(fn) as file:
-        for line in file:
+    for line in lines:
+        # blank line starts a new ingredient
+        if line in ('', '\n'):
+            data.append({})
+            display.append([])
+            prevTag = None
 
-            # ignore comments
-            if line[0] == "#":
-                pass
+        # ignore comments
+        elif line[0] == "#":
+            pass
 
-            # blank line starts a new ingredient
-            elif line == "\n":
-                data.append({})
-                display.append([])
-                prevTag = None
+        # otherwise it's a token
+        # e.g.: potato \t I2 \t L5 \t NoCAP \t B-NAME/0.978253
+        else:
 
-            # otherwise it's a token
-            # e.g.: potato \t I2 \t L5 \t NoCAP \t B-NAME/0.978253
+            columns = re.split('\t', line.strip())
+            token = columns[0].strip()
+
+            # unclump fractions
+            token = unclump(token)
+
+            # turn B-NAME/123 back into "name"
+            tag, confidence = re.split(r'/', columns[-1], 1)
+            tag = re.sub('^[BI]\-', "", tag).lower()
+
+            # ---- DISPLAY ----
+            # build a structure which groups each token by its tag, so we can
+            # rebuild the original display name later.
+
+            if prevTag != tag:
+                display[-1].append((tag, [token]))
+                prevTag = tag
+
             else:
+                display[-1][-1][1].append(token)
+                #               ^- token
+                #            ^---- tag
+                #        ^-------- ingredient
 
-                columns = re.split(r'\t', string.strip(line))
-                token = string.strip(columns[0])
+            # ---- DATA ----
+            # build a dict grouping tokens by their tag
 
-                # unclump fractions
-                token = unclump(token)
+            # initialize this attribute if this is the first token of its kind
+            if tag not in data[-1]:
+                data[-1][tag] = []
 
-                # turn B-NAME/123 back into "name"
-                tag, confidence = re.split(r'/', columns[-1], 1)
-                tag = re.sub(r'^[BI]\-', "", tag).lower()
+            # HACK: If this token is a unit, singularize it so Scoop accepts it.
+            if tag == "unit":
+                token = singularize(token)
 
-                # ---- DISPLAY ----
-                # build a structure which groups each token by its tag, so we can
-                # rebuild the original display name later.
-
-                if prevTag != tag:
-                    display[-1].append((tag, [token]))
-                    prevTag = tag
-
-                else:
-                    display[-1][-1][1].append(token)
-                    #               ^- token
-                    #            ^---- tag
-                    #        ^-------- ingredient
-
-                # ---- DATA ----
-                # build a dict grouping tokens by their tag
-
-                # initialize this attribute if this is the first token of its kind
-                if tag not in data[-1]:
-                    data[-1][tag] = []
-
-                # HACK: If this token is a unit, singularize it so Scoop accepts it.
-                if tag == "unit":
-                    token = singularize(token)
-
-                data[-1][tag].append(token)
+            data[-1][tag].append(token)
 
     # reassemble the output into a list of dicts.
     output = [

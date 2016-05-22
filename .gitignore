@@ -1,3 +1,4 @@
 *.pyc
+build/
 tmp/*
 log/*

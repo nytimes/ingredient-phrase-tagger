@@ -39,7 +39,7 @@ examples using the [CRF++][crfpp] library.
 On OSX:
 
     brew install crf++
-    pip install -r requirements.txt
+    python setup.py install
 
 
 ## Quick Start
@@ -97,12 +97,12 @@ To use the model to tag your own arbitrary ingredient lines (stored here in
 the model file which we generated above. We provide another helper script to do
 this:
 
-    python lib/testing/parse-ingredients.py input.txt > results.txt
+    python bin/parse-ingredients.py input.txt > results.txt
 
 The output is also in CRF++ format, which isn't terribly helpful to us. To
 convert it into JSON:
-    
-    python lib/testing/convert-to-json.py results.txt > results.json
+
+    python bin/convert-to-json.py results.txt > results.json
 
 See the top of this README for an example of the expected output.
 
