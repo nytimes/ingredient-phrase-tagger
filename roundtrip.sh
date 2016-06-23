@@ -19,5 +19,5 @@ ruby visualize.rb tmp/test_output > tmp/output.html || exit 1
 
 echo "evaluating..."
 FN=log/`date +%s`.txt
-python lib/testing/evaluate.py tmp/test_output > $FN || exit 1
+python bin/evaluate.py tmp/test_output > $FN || exit 1
 cat $FN

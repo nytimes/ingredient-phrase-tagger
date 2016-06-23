@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-
 import sys
+
 
 if len(sys.argv) < 2:
     sys.stderr.write('Usage: evaluate.py FILENAME')

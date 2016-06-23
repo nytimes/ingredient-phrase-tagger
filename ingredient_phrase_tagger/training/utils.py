@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-
 import re
+import string
+
 
 def tokenize(s):
     """
@@ -189,3 +190,117 @@ def smartJoin(words):
     input = input.replace(" )", ")")
 
     return input
+
+
+def import_data(lines):
+    """
+    This thing takes the output of CRF++ and turns it into an actual
+    data structure.
+    """
+    data = [{}]
+    display = [[]]
+    prevTag = None
+    #
+    # iterate lines in the data file, which looks like:
+    #
+    #   # 0.511035
+    #   1/2       I1  L12  NoCAP  X  B-QTY/0.982850
+    #   teaspoon  I2  L12  NoCAP  X  B-UNIT/0.982200
+    #   fresh     I3  L12  NoCAP  X  B-COMMENT/0.716364
+    #   thyme     I4  L12  NoCAP  X  B-NAME/0.816803
+    #   leaves    I5  L12  NoCAP  X  I-NAME/0.960524
+    #   ,         I6  L12  NoCAP  X  B-COMMENT/0.772231
+    #   finely    I7  L12  NoCAP  X  I-COMMENT/0.825956
+    #   chopped   I8  L12  NoCAP  X  I-COMMENT/0.893379
+    #
+    #   # 0.505999
+    #   Black   I1  L8  YesCAP  X  B-NAME/0.765461
+    #   pepper  I2  L8  NoCAP   X  I-NAME/0.756614
+    #   ,       I3  L8  NoCAP   X  OTHER/0.798040
+    #   to      I4  L8  NoCAP   X  B-COMMENT/0.683089
+    #   taste   I5  L8  NoCAP   X  I-COMMENT/0.848617
+    #
+    # i.e. the output of crf_test -v 1
+    #
+    for line in lines:
+        # blank line starts a new ingredient
+        if line in ('', '\n'):
+            data.append({})
+            display.append([])
+            prevTag = None
+
+        # ignore comments
+        elif line[0] == "#":
+            pass
+
+        # otherwise it's a token
+        # e.g.: potato \t I2 \t L5 \t NoCAP \t B-NAME/0.978253
+        else:
+
+            columns = re.split('\t', line.strip())
+            token = columns[0].strip()
+
+            # unclump fractions
+            token = unclump(token)
+
+            # turn B-NAME/123 back into "name"
+            tag, confidence = re.split(r'/', columns[-1], 1)
+            tag = re.sub('^[BI]\-', "", tag).lower()
+
+            # ---- DISPLAY ----
+            # build a structure which groups each token by its tag, so we can
+            # rebuild the original display name later.
+
+            if prevTag != tag:
+                display[-1].append((tag, [token]))
+                prevTag = tag
+
+            else:
+                display[-1][-1][1].append(token)
+                #               ^- token
+                #            ^---- tag
+                #        ^-------- ingredient
+
+            # ---- DATA ----
+            # build a dict grouping tokens by their tag
+
+            # initialize this attribute if this is the first token of its kind
+            if tag not in data[-1]:
+                data[-1][tag] = []
+
+            # HACK: If this token is a unit, singularize it so Scoop accepts it.
+            if tag == "unit":
+                token = singularize(token)
+
+            data[-1][tag].append(token)
+
+    # reassemble the output into a list of dicts.
+    output = [
+        dict([(k, smartJoin(tokens)) for k, tokens in ingredient.iteritems()])
+        for ingredient in data
+        if len(ingredient)
+        ]
+    # Add the marked-up display data
+    for i, v in enumerate(output):
+        output[i]["display"] = displayIngredient(display[i])
+
+    # Add the raw ingredient phrase
+    for i, v in enumerate(output):
+        output[i]["input"] = smartJoin(
+            [" ".join(tokens) for k, tokens in display[i]])
+
+    return output
+
+
+def export_data(lines):
+    """ Parse "raw" ingredient lines into CRF-ready output """
+    output = []
+    for line in lines:
+        line_clean = re.sub('<[^<]+?>', '', line)
+        tokens = tokenize(line_clean)
+
+        for i, token in enumerate(tokens):
+            features = getFeatures(token, i+1, tokens)
+            output.append(joinLine([token] + features))
+        output.append('')
+    return '\n'.join(output)
