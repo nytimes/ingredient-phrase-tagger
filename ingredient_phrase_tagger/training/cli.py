@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import re
 import decimal
 import optparse
@@ -28,6 +30,7 @@ class Cli(object):
         df_slice = df.iloc[start: end]
 
         for index, row in df_slice.iterrows():
+            out = []
             try:
                 # extract the display name
                 display_input = utils.cleanUnicodeFractions(row["input"])
@@ -38,13 +41,14 @@ class Cli(object):
 
                 for i, (token, tags) in enumerate(rowData):
                     features = utils.getFeatures(token, i+1, tokens)
-                    print utils.joinLine([token] + features + [self.bestTag(tags)])
+                    out.append(utils.joinLine([token] + features + [self.bestTag(tags)]))
 
             # ToDo: deal with this
             except UnicodeDecodeError:
                 pass
 
-            print
+            if out:
+                print('\n'.join(out), end='\n\n')
 
     def parseNumbers(self, s):
         """
