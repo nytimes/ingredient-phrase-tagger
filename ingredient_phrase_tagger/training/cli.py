@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import re
 import decimal
-import optparse
+import argparse
 import pandas as pd
 
 import utils
@@ -24,8 +24,8 @@ class Cli(object):
         df = pd.read_csv(self.opts.data_path)
         df = df.fillna("")
 
-        start = int(offset)
-        end = int(offset) + int(count)
+        start = offset
+        end = offset + count
 
         df_slice = df.iloc[start: end]
 
@@ -156,11 +156,11 @@ class Cli(object):
         Parse the command-line arguments into a dict.
         """
 
-        opts = optparse.OptionParser()
+        parser = argparse.ArgumentParser(
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-        opts.add_option("--count", default="100", help="(%default)")
-        opts.add_option("--offset", default="0", help="(%default)")
-        opts.add_option("--data-path", default="nyt-ingredients-snapshot-2015.csv", help="(%default)")
+        parser.add_argument("--count", default=100, type=int, help=' ')
+        parser.add_argument("--offset", default=0, type=int, help=' ')
+        parser.add_argument("--data-path", default="nyt-ingredients-snapshot-2015.csv", help=' ')
 
-        (options, args) = opts.parse_args(argv)
-        return options
+        return parser.parse_args(argv)
