@@ -1,7 +1,11 @@
+from __future__ import print_function
+
 import re
 import decimal
-import optparse
+import argparse
 import pandas as pd
+from multiprocessing import Pool, TimeoutError, Queue, Process, Manager
+from Queue import Empty
 
 import utils
 
@@ -10,11 +14,13 @@ class Cli(object):
     def __init__(self, argv):
         self.opts = self._parse_args(argv)
         self._upstream_cursor = None
+        m = Manager()
+        self.output_queue = m.Queue()
 
     def run(self):
-        self.generate_data(self.opts.count, self.opts.offset)
+        self.generate_data(self.opts.count, self.opts.offset, self.opts.threads)
 
-    def generate_data(self, count, offset):
+    def generate_data(self, count, offset, threads):
         """
         Generates training data in the CRF++ format for the ingredient
         tagging task
@@ -22,12 +28,23 @@ class Cli(object):
         df = pd.read_csv(self.opts.data_path)
         df = df.fillna("")
 
-        start = int(offset)
-        end = int(offset) + int(count)
+        start = offset
+        end = offset + count
 
         df_slice = df.iloc[start: end]
 
-        for index, row in df_slice.iterrows():
+        qr = Process(target=self.start_queue_reader)
+        qr.start()
+        worker_pool = Pool(processes=threads or None)
+        worker_pool.map_async(self._generate_data_worker, df_slice.iterrows())
+        worker_pool.close()
+        worker_pool.join()
+        self.output_queue.put('DONE')
+        qr.join()
+
+    def _generate_data_worker(self, args):
+            index, row = args
+            out = []
             try:
                 # extract the display name
                 display_input = utils.cleanUnicodeFractions(row["input"])
@@ -38,13 +55,24 @@ class Cli(object):
 
                 for i, (token, tags) in enumerate(rowData):
                     features = utils.getFeatures(token, i+1, tokens)
-                    print utils.joinLine([token] + features + [self.bestTag(tags)])
+                    out.append(utils.joinLine([token] + features + [self.bestTag(tags)]))
 
             # ToDo: deal with this
             except UnicodeDecodeError:
                 pass
 
-            print
+            if out:
+                self.output_queue.put('\n'.join(out))
+
+    def start_queue_reader(self):
+        o = None
+        while o != 'DONE':
+            try:
+                o = self.output_queue.get()
+                if o != 'DONE':
+                    print(o, end="\n\n", flush=True)
+            except Empty:
+                pass
 
     def parseNumbers(self, s):
         """
@@ -152,11 +180,12 @@ class Cli(object):
         Parse the command-line arguments into a dict.
         """
 
-        opts = optparse.OptionParser()
+        parser = argparse.ArgumentParser(
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-        opts.add_option("--count", default="100", help="(%default)")
-        opts.add_option("--offset", default="0", help="(%default)")
-        opts.add_option("--data-path", default="nyt-ingredients-snapshot-2015.csv", help="(%default)")
+        parser.add_argument("--count", default=100, type=int, help=' ')
+        parser.add_argument("--offset", default=0, type=int, help=' ')
+        parser.add_argument("--threads", default=0, type=int, help=' ')
+        parser.add_argument("--data-path", default="nyt-ingredients-snapshot-2015.csv", help=' ')
 
-        (options, args) = opts.parse_args(argv)
-        return options
+        return parser.parse_args(argv)
