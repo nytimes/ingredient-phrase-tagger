@@ -2,6 +2,9 @@
 import re
 import string
 
+# added on 06/07/2017
+from nltk.stem.snowball import SnowballStemmer
+
 
 def tokenize(s):
     """
@@ -96,41 +99,11 @@ def getFeatures(token, index, tokens):
 
 def singularize(word):
     """
-    A poor replacement for the pattern.en singularize function, but ok for now.
+    use nltk/Snowballstemmer to singularize word.
     """
-
-    units = {
-        "cups": u"cup",
-        "tablespoons": u"tablespoon",
-        "teaspoons": u"teaspoon",
-        "pounds": u"pound",
-        "ounces": u"ounce",
-        "cloves": u"clove",
-        "sprigs": u"sprig",
-        "pinches": u"pinch",
-        "bunches": u"bunch",
-        "slices": u"slice",
-        "grams": u"gram",
-        "heads": u"head",
-        "quarts": u"quart",
-        "stalks": u"stalk",
-        "pints": u"pint",
-        "pieces": u"piece",
-        "sticks": u"stick",
-        "dashes": u"dash",
-        "fillets": u"fillet",
-        "cans": u"can",
-        "ears": u"ear",
-        "packages": u"package",
-        "strips": u"strip",
-        "bulbs": u"bulb",
-        "bottles": u"bottle"
-    }
-
-    if word in units.keys():
-        return units[word]
-    else:
-        return word
+    # returned stemmed word
+    stemmer = SnowballStemmer("english")
+    return stemmer.stem(word)
 
 def isCapitalized(token):
     """
@@ -171,25 +144,17 @@ def displayIngredient(ingredient):
         for tag, tokens in ingredient
     ])
 
-# HACK: fix this
+# updated on 06/07/2017
 def smartJoin(words):
     """
     Joins list of words with spaces, but is smart about not adding spaces
     before commas.
     """
-
-    input = " ".join(words)
-
-    # replace " , " with ", "
-    input = input.replace(" , ", ", ")
-
-    # replace " ( " with " ("
-    input = input.replace("( ", "(")
-
-    # replace " ) " with ") "
-    input = input.replace(" )", ")")
-
-    return input
+    output_ = " ".join(words)
+    # use regex to replace space before comma and after open brace
+    output_ = re.sub('\s\W', lambda x: x.group(0).lstrip(), output_, flags=re.IGNORECASE)
+    output_ = re.sub('\(\s', lambda x: x.group(0).rstrip(), output_, flags=re.IGNORECASE)
+    return output_
 
 
 def import_data(lines):
@@ -244,8 +209,21 @@ def import_data(lines):
             token = unclump(token)
 
             # turn B-NAME/123 back into "name"
-            tag, confidence = re.split(r'/', columns[-1], 1)
+            # added on 06/07/2017
+            # Confidence score may not be present if output was generated without the 'crf_test -v' command
+            # check if confidence score is present before assigning 'tag'
+
+            label_ = re.split(r'/', columns[-1], 1)
+            if len(label_) > 1:
+                tag = label_[0]
+                confidence = label_[1]
+            elif len(label_) == 1:
+                tag = label_[0]
+            else:
+                print "Unknown class label - missing"
             tag = re.sub('^[BI]\-', "", tag).lower()
+
+            # end update
 
             # ---- DISPLAY ----
             # build a structure which groups each token by its tag, so we can

@@ -1,2 +1,3 @@
 Unidecode==0.04.14
 pandas==0.17.1
+nltk==3.2.4
