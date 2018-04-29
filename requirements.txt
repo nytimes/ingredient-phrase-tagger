@@ -1,2 +1,4 @@
 Unidecode==0.04.14
 pandas==0.17.1
+json-rpc==1.10.8
+Werkzeug==0.14.1

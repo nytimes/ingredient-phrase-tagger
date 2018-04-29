@@ -9,12 +9,17 @@ import os
 import tempfile
 import json
 import subprocess
+import pdb
 
 from ingredient_phrase_tagger.training import utils
 
 def parse_ingredients(ingredients):
     # take out any characters not suited for json
-    formatted_ingredients = [ i.encode('ascii', 'ignore').encode('utf-8') for i in ingredients ]
+    formatted_ingredients = [
+        i.replace(u'\xa0', ' ') \
+        .encode('ascii', 'ignore') \
+        .encode('utf-8') \
+    for i in ingredients ]
     _, tmpFile = tempfile.mkstemp()
 
     with open(tmpFile, 'w') as outfile:
