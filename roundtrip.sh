@@ -1,12 +1,12 @@
 #!/bin/sh
-COUNT_TRAIN=20000
-COUNT_TEST=2000
+COUNT_TRAIN=150000
+COUNT_TEST=15000
 
 echo "generating training data..."
-bin/generate_data --data-path=nyt-ingredients-snapshot-2015.csv --count=$COUNT_TRAIN --offset=0 > tmp/train_file || exit 1
+bin/generate_data --data-path=hacked_data.csv --count=$COUNT_TRAIN --offset=0 > tmp/train_file || exit 1
 
 echo "generating test data..."
-bin/generate_data --data-path=nyt-ingredients-snapshot-2015.csv --count=$COUNT_TEST --offset=$COUNT_TRAIN > tmp/test_file || exit 1
+bin/generate_data --data-path=hacked_data.csv --count=$COUNT_TEST --offset=$COUNT_TRAIN > tmp/test_file || exit 1
 
 echo "training..."
 crf_learn template_file tmp/train_file tmp/model_file || exit 1
